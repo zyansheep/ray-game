@@ -74,7 +74,7 @@ fn setup(
 				TextSection {
 					value: "Score: ".to_string(),
 					style: TextStyle {
-						font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+						font: asset_server.load("fonts/Jasmine.ttf"),
 						font_size: 40.0,
 						color: Color::rgb(0.5, 0.5, 1.0),
 					},
@@ -82,7 +82,7 @@ fn setup(
 				TextSection {
 					value: "".to_string(),
 					style: TextStyle {
-						font: asset_server.load("fonts/FiraMono-Medium.ttf"),
+						font: asset_server.load("fonts/Jasmine.ttf"),
 						font_size: 40.0,
 						color: Color::rgb(1.0, 0.5, 0.5),
 					},
@@ -145,8 +145,8 @@ fn setup(
 		.insert(Collider::Solid);
 
 	// Add bricks
-	let brick_rows = 4;
-	let brick_columns = 5;
+	let brick_rows = 5;
+	let brick_columns = 6;
 	let brick_spacing = 20.0;
 	let brick_size = Vec2::new(150.0, 30.0);
 	let bricks_width = brick_columns as f32 * (brick_size.x + brick_spacing) - brick_spacing;

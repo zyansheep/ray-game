@@ -22,17 +22,22 @@
 			pname = "dbr-sim";
 			root = ./.;
 			buildInputs = with pkgs; [
+				# Package location
 				pkgconfig
+				# Window and Input
 				x11
 				xorg.libXcursor
 				xorg.libXrandr
 				xorg.libXi
+
+				# Vulkan
 				vulkan-tools
 				vulkan-headers
 				vulkan-loader
 				vulkan-validation-layers
-				alsaLib
-				libudev
+				alsaLib # Sound support
+				libudev # device management
+				lld # fast linker
 			];
 		};
 		defaultPackage = packages.dbr-sim;
