@@ -10,16 +10,16 @@
 		pkgs = nixpkgs.legacyPackages."${system}";
 		# Specify Rust Toolchain
 		# Use Stable (Default)
-		naersk-lib = naersk.lib."${system}";
+		# naersk-lib = naersk.lib."${system}";
 		# Use Nightly (provided by fenix)
-		/* naersk-lib = naersk.lib."${system}".override {
+		naersk-lib = naersk.lib."${system}".override {
 			# Use Fenix to get nightly rust
 			inherit (fenix.packages.${system}.minimal) cargo rustc;
-		}; */
+		};
 	in rec {
 		# `nix build`
-		packages.dbr-sim = naersk-lib.buildPackage {
-			pname = "dbr-sim";
+		packages.ray_game = naersk-lib.buildPackage {
+			pname = "ray_game";
 			root = ./.;
 			buildInputs = with pkgs; [
 				# Package location
@@ -40,17 +40,17 @@
 				lld # fast linker
 			];
 		};
-		defaultPackage = packages.dbr-sim;
+		defaultPackage = packages.ray_game;
 
 		# `nix run`
-		apps.dbr-sim = utils.lib.mkApp {
-			drv = packages.dbr-sim;
+		apps.ray_game = utils.lib.mkApp {
+			drv = packages.ray_game;
 		};
-		defaultApp = apps.dbr-sim;
+		defaultApp = apps.ray_game;
 
 		# `nix develop`
 		devShell = pkgs.mkShell {
-			buildInputs = packages.dbr-sim.buildInputs;
+			buildInputs = packages.ray_game.buildInputs;
 		};
 	});
 }
