@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-#[macro_use] extern crate bevy;
 use bevy::{prelude::*, render::camera::Camera};
 
 mod player;
@@ -56,20 +55,20 @@ fn keyboard_input_system (
 	let mut player_transform = player_transform.single_mut().unwrap();
 	
 	if keyboard_input.pressed(KeyCode::W) {
-		info!("'W' currently pressed");
+		//info!("'W' currently pressed");
 		player_transform.translation.x += 0.1; 
 	}
 	if keyboard_input.pressed(KeyCode::S) {
-		info!("'S' currently pressed");
+		//info!("'S' currently pressed");
 		player_transform.translation.x -= 0.1;
 	}
 	if keyboard_input.pressed(KeyCode::A) {
-		info!("'A' currently pressed");
-		player_transform.translation.z += 0.1;
+		//info!("'A' currently pressed");
+		player_transform.translation.z -= 0.1;
 	}
 	if keyboard_input.pressed(KeyCode::D) {
-		info!("'A' currently pressed");
-		player_transform.translation.z -= 0.1;
+		//info!("'A' currently pressed");
+		player_transform.translation.z += 0.1;
 	}
 }
 fn camera_movement_system (
