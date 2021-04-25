@@ -13,7 +13,8 @@ impl Plugin for OrbitCameraPlugin {
 		.insert_resource(self.initial_state.clone()) // Initial state of camera
 		.add_event::<CameraFocusEvent>() // Focus change event listener
 		.add_startup_system(spawn_camera.system())
-		.add_system(orbit_camera.system());
+    //.add_system(orbit_camera.system());
+		.add_system_to_stage(CoreStage::PostUpdate, orbit_camera.system()); // Make sure camera is updated after main logic is run (i.e. Focus Event)
 	}
 }
 impl OrbitCameraPlugin {
