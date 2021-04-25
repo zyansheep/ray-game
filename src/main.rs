@@ -10,7 +10,7 @@ fn main() {
 	App::build()
 	.insert_resource(Msaa { samples: 8 })
 	.add_plugins(DefaultPlugins)
-	.add_plugin(OrbitCameraPlugin)
+	.add_plugin(OrbitCameraPlugin::new(Vec3::new(0.0, 1.0, 0.0), Vec3::new(-3.0, 5.0, 0.0)))
 	.add_startup_system(setup.system())
 	.add_system(player_movement.system())
 	//.add_system(camera_movement_system.system())

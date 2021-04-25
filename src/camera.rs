@@ -1,16 +1,32 @@
 
 use bevy::{input::mouse::{MouseMotion, MouseWheel}, prelude::*, render::camera::PerspectiveProjection};
 
-pub struct OrbitCameraPlugin;
+#[derive(Clone)]
+struct OrbitCameraState {
+	initial_focus: Vec3,
+	initial_position: Vec3,
+}
+pub struct OrbitCameraPlugin { initial_state: OrbitCameraState }
 impl Plugin for OrbitCameraPlugin {
 	fn build(&self, app: &mut AppBuilder) {
 		app
-			// .init_resource::<MyOtherResource>()
-			.add_event::<CameraFocusEvent>()
-			.add_startup_system(spawn_camera.system())
-			.add_system(orbit_camera.system());
+		.insert_resource(self.initial_state.clone()) // Initial state of camera
+		.add_event::<CameraFocusEvent>() // Focus change event listener
+		.add_startup_system(spawn_camera.system())
+		.add_system(orbit_camera.system());
 	}
 }
+impl OrbitCameraPlugin {
+	pub fn new(initial_focus: Vec3, initial_position: Vec3) -> Self {
+		Self {
+			initial_state: OrbitCameraState {
+				initial_focus,
+				initial_position,
+			}
+		}
+	}
+}
+
 
 #[derive(Clone)]
 pub enum CameraInterpolation {
@@ -114,16 +130,18 @@ fn get_primary_window_size(windows: &Res<Windows>) -> Vec2 {
 }
 
 /// Spawn a camera like this
-fn spawn_camera(mut commands: Commands) {
-	let translation = Vec3::new(-2.0, 2.5, 5.0);
+fn spawn_camera(mut commands: Commands, initial_state: ResMut<OrbitCameraState>) {
+	let focus = initial_state.initial_focus;
+	let translation = initial_state.initial_position - focus;
 	let distance = translation.length();
+	info!("translation: {}, distance: {}", translation, distance);
 
 	commands.spawn_bundle(PerspectiveCameraBundle {
 		transform: Transform::from_translation(translation)
-			.looking_at(Vec3::ZERO, Vec3::Y),
+			.looking_at(focus, Vec3::Y),
 		..Default::default()
 	}).insert(OrbitCamera {
-		focus: Vec3::ZERO,
+		focus,
 		distance,
 		..Default::default()
 	});
