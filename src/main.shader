@@ -61,16 +61,13 @@ void main(){
 		totalDist+=finalDist;
 		finalDist=mainSDF(camRay.pos);
 	}
-	vec4 color = vec4(0.0);
+	vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
 	if (finalDist < 0.01) {
-		color = vec4(1.0);
+		vec3 normal = estimateNormal(camRay.pos);
+		vec3 lightPos=vec3(2.0,1.0,1.0);
+		float dotSN=dot(normal,normalize(lightPos-camRay.pos));
+		color = vec4(0.5+0.5*normal,1.0) * dotSN; //estimateNormal(camRay.pos);
 	}
 	o_Target = color;
-	// vec3 normal=estimateNormal(camRay.pos);
 	
-	// vec3 lightPos=vec3(2.0,1.0,1.0);
-	
-	// float dotSN=dot(normal,normalize(lightPos-camRay.pos));
-	
-	// o_Target=vec4(0.5+0.5*normal,1.0)*dotSN;
 }

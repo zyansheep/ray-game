@@ -10,7 +10,14 @@ use crate::camera::CameraUniform;
 
 fn main() {
 	App::build()
-		.insert_resource(Msaa { samples: 8 })
+		//.insert_resource(Msaa { samples: 8 })
+    	.insert_resource(WindowDescriptor {
+            title: "Ray Game".to_string(),
+            width: 1280.,
+            height: 720.,
+            vsync: true,
+            ..Default::default()
+        })
 		.add_plugins(DefaultPlugins)
 		// Orbit Camera Plugin
 		.add_plugin(OrbitCameraPlugin::new(
@@ -19,7 +26,7 @@ fn main() {
 		))
 		.add_startup_system(setup.system())
 		.add_system(player_movement.system())
-    	.add_system_to_stage(CoreStage::Update, uniform_update.system())
+		.add_system_to_stage(CoreStage::Update, uniform_update.system())
 		.run();
 }
 
@@ -58,15 +65,15 @@ fn setup(
 
 	
 	render_graph.add_system_node(
-        "camera_uniform",
-        RenderResourcesNode::<CameraUniform>::new(true),
-    );
+		"camera_uniform",
+		RenderResourcesNode::<CameraUniform>::new(true),
+	);
 
-    // Add a `RenderGraph` edge connecting our new "time_component" node to the main pass node. This
-    // ensures that "time_component" runs before the main pass.
-    render_graph
-        .add_node_edge("camera_uniform", base::node::MAIN_PASS)
-        .unwrap();
+	// Add a `RenderGraph` edge connecting our new "time_component" node to the main pass node. This
+	// ensures that "time_component" runs before the main pass.
+	render_graph
+		.add_node_edge("camera_uniform", base::node::MAIN_PASS)
+		.unwrap();
 
 	// plane with PBR material
 	commands.spawn_bundle(PbrBundle {
@@ -82,6 +89,10 @@ fn setup(
 			render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
 				pipeline_handle,
 			)]),
+			visible: Visible {
+				is_transparent: true,
+				..Default::default()
+			},
 			transform: Transform::from_xyz(0.0, 0.5, 0.0),
 			..Default::default()
 		},
