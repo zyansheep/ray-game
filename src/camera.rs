@@ -2,32 +2,30 @@
 use bevy::{input::mouse::{MouseMotion, MouseWheel}, prelude::*, render::camera::PerspectiveProjection};
 
 #[derive(Clone)]
-struct OrbitCameraState {
-	initial_focus: Vec3,
-	initial_position: Vec3,
+pub struct OrbitCameraInitialState {
+	pub initial_focus: Vec3,
+	pub initial_position: Vec3,
 }
-pub struct OrbitCameraPlugin { initial_state: OrbitCameraState }
+pub struct OrbitCameraPlugin { initial_state: OrbitCameraInitialState }
 impl Plugin for OrbitCameraPlugin {
 	fn build(&self, app: &mut AppBuilder) {
 		app
 		.insert_resource(self.initial_state.clone()) // Initial state of camera
 		.add_event::<CameraFocusEvent>() // Focus change event listener
-		.add_startup_system(spawn_camera.system())
-    //.add_system(orbit_camera.system());
+    	.add_startup_system(spawn_camera.system())
 		.add_system_to_stage(CoreStage::PostUpdate, orbit_camera.system()); // Make sure camera is updated after main logic is run (i.e. Focus Event)
 	}
 }
 impl OrbitCameraPlugin {
 	pub fn new(initial_focus: Vec3, initial_position: Vec3) -> Self {
 		Self {
-			initial_state: OrbitCameraState {
+			initial_state: OrbitCameraInitialState {
 				initial_focus,
 				initial_position,
 			}
 		}
 	}
 }
-
 
 #[derive(Clone)]
 pub enum CameraInterpolation {
@@ -46,7 +44,7 @@ impl CameraFocusEvent {
 }
 
 /// Tags an entity as capable of panning and orbiting.
-struct OrbitCamera {
+pub struct OrbitCamera {
 	/// The "focus point" to orbit around. It is automatically updated when panning the camera
 	pub focus: Vec3,
 	/// Distance from focus point
@@ -131,7 +129,7 @@ fn get_primary_window_size(windows: &Res<Windows>) -> Vec2 {
 }
 
 /// Spawn a camera like this
-fn spawn_camera(mut commands: Commands, initial_state: ResMut<OrbitCameraState>) {
+fn spawn_camera(mut commands: Commands, initial_state: ResMut<OrbitCameraInitialState>) {
 	let focus = initial_state.initial_focus;
 	let translation = initial_state.initial_position - focus;
 	let distance = translation.length();
