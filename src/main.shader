@@ -3,10 +3,10 @@ layout(location = 0) out vec4 o_Target;
 /* layout(set = 2, binding = 0) uniform RayMaterial_color {
 	vec4 color;
 }; */
-layout(set = 2, binding = 0) uniform RayMaterial_camera_position {
+layout(set = 2, binding = 0) uniform CameraUniform_camera_position {
 	vec3 camera_position;
 };
-layout(set = 3, binding = 0) uniform RayMaterial_camera_direction {
+layout(set = 3, binding = 0) uniform CameraUniform_camera_direction {
 	vec3 camera_direction;
 };
 struct ray {

@@ -1,5 +1,12 @@
 
-use bevy::{input::mouse::{MouseMotion, MouseWheel}, prelude::*, render::camera::PerspectiveProjection};
+use bevy::{input::mouse::{MouseMotion, MouseWheel}, prelude::*, reflect::TypeUuid, render::{camera::PerspectiveProjection, renderer::RenderResources}};
+
+#[derive(RenderResources, Default, TypeUuid)]
+#[uuid = "463e4b8a-d555-4fc2-ba9f-4c880063ba92"]
+pub struct CameraUniform {
+	pub camera_position: Vec3,
+	pub camera_direction: Vec3,
+}
 
 #[derive(Clone)]
 pub struct OrbitCameraInitialState {

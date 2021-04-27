@@ -1,16 +1,17 @@
 #![allow(unused_imports, unused_import_braces, dead_code)]
-use bevy::{diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin}, input::mouse::MouseMotion, prelude::*, reflect::TypeUuid, render::{camera::Camera, pipeline::{PipelineDescriptor, RenderPipeline}, render_graph::{AssetRenderResourcesNode, RenderGraph, base}, renderer::RenderResources, shader::{ShaderStage, ShaderStages}}};
+use bevy::{diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin}, input::mouse::MouseMotion, prelude::*, reflect::TypeUuid, render::{camera::Camera, pipeline::{PipelineDescriptor, RenderPipeline}, render_graph::{AssetRenderResourcesNode, RenderGraph, RenderResourcesNode, base}, renderer::RenderResources, shader::{ShaderStage, ShaderStages}}};
 
 mod player;
 use player::Player;
 mod camera;
 use camera::{CameraFocusEvent, CameraInterpolation, OrbitCamera, OrbitCameraInitialState, OrbitCameraPlugin};
 
+use crate::camera::CameraUniform;
+
 fn main() {
 	App::build()
 		.insert_resource(Msaa { samples: 8 })
 		.add_plugins(DefaultPlugins)
-		.add_asset::<RayMaterial>()
 		// Orbit Camera Plugin
 		.add_plugin(OrbitCameraPlugin::new(
 			Vec3::new(0.0, 1.0, 0.0),
@@ -18,15 +19,8 @@ fn main() {
 		))
 		.add_startup_system(setup.system())
 		.add_system(player_movement.system())
-    	.add_system_to_stage(CoreStage::Update, material_update.system())
+    	.add_system_to_stage(CoreStage::Update, uniform_update.system())
 		.run();
-}
-
-#[derive(RenderResources, Default, TypeUuid)]
-#[uuid = "1e08866c-0b8a-437e-8bce-37733b25127e"]
-struct RayMaterial {
-	pub camera_position: Vec3,
-	pub camera_direction: Vec3,
 }
 
 const VERTEX_SHADER: &str = r#"
@@ -51,9 +45,8 @@ fn setup(
 	mut pipelines: ResMut<Assets<PipelineDescriptor>>,
 	mut shaders: ResMut<Assets<Shader>>,
 	mut meshes: ResMut<Assets<Mesh>>,
-	mut materials: ResMut<Assets<RayMaterial>>,
+	mut materials: ResMut<Assets<StandardMaterial>>,
 	mut render_graph: ResMut<RenderGraph>,
-	camera: Res<OrbitCameraInitialState>,
 ) {
 	// Create a new shader pipeline
 	let pipeline_handle = pipelines.add(PipelineDescriptor::default_config(ShaderStages {
@@ -61,29 +54,22 @@ fn setup(
 		fragment: Some(shaders.add(Shader::from_glsl(ShaderStage::Fragment, FRAGMENT_SHADER))),
 	}));
 
-	// Add an AssetRenderResourcesNode to our Render Graph. This will bind RayMaterial resources to
-	// our shader
+	
 	render_graph.add_system_node(
-		"ray_material",
-		AssetRenderResourcesNode::<RayMaterial>::new(true),
-	);
+        "camera_uniform",
+        RenderResourcesNode::<CameraUniform>::new(true),
+    );
 
-	// Add a Render Graph edge connecting our new "ray_material" node to the main pass node. This
-	// ensures "ray_material" runs before the main pass
-	render_graph
-		.add_node_edge("ray_material", base::node::MAIN_PASS)
-		.unwrap();
+    // Add a `RenderGraph` edge connecting our new "time_component" node to the main pass node. This
+    // ensures that "time_component" runs before the main pass.
+    render_graph
+        .add_node_edge("camera_uniform", base::node::MAIN_PASS)
+        .unwrap();
 
-	// Create a new material
-	let ray_material = materials.add(RayMaterial {
-		camera_position: camera.initial_position,
-		camera_direction: (camera.initial_position - camera.initial_focus).normalize(),
-	});
-
-	// plane
+	// plane with PBR material
 	commands.spawn_bundle(PbrBundle {
 		mesh: meshes.add(Mesh::from(shape::Plane { size: 5.0 })),
-		//material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+		material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
 		..Default::default()
 	});
 	// character
@@ -97,7 +83,7 @@ fn setup(
 			transform: Transform::from_xyz(0.0, 0.5, 0.0),
 			..Default::default()
 		},
-	)).insert(ray_material);
+	)).insert(CameraUniform::default()); // Camera Position/Direction Uniform
 	// light
 	commands.spawn_bundle(PointLightBundle {
 		transform: Transform::from_xyz(4.0, 8.0, 4.0),
@@ -110,14 +96,15 @@ fn setup(
 	});
 }
 
-fn material_update(
-	mut material: Query<&mut RayMaterial>,
+fn uniform_update(
+	mut camera_uniforms: Query<&mut CameraUniform>,
 	camera: Query<(&OrbitCamera, &Transform)>,
 ) {
-	let mut ray_material = material.single_mut().unwrap();
+	// Update all camera uniforms
+	let mut camera_uniform = camera_uniforms.single_mut().unwrap();
 	let (camera, camera_transform) = camera.single().unwrap();
-	ray_material.camera_position = camera_transform.translation;
-	ray_material.camera_direction = camera_transform.translation - camera.focus;
+	camera_uniform.camera_position = camera_transform.translation;
+	camera_uniform.camera_direction = camera_transform.translation - camera.focus;
 }
 
 fn player_movement(
