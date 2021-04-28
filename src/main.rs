@@ -172,7 +172,15 @@ fn player_movement(
 		moved = true;
 		player_transform.translation.z += 0.1;
 	}
-	if moved {
+	if keyboard_input.pressed(KeyCode::Space) {
+		moved = true;
+		player_transform.translation.y += 0.1;
+	}
+	if keyboard_input.pressed(KeyCode::LShift) {
+		moved = true;
+		player_transform.translation.y -= 0.1;
+	}
+ 	if moved {
 		focus_broadcast.send(CameraFocusEvent::new(
 			player_transform.translation,
 			CameraInterpolation::None,
