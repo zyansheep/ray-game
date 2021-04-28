@@ -3,11 +3,14 @@ layout(location = 0) out vec4 o_Target;
 /* layout(set = 2, binding = 0) uniform RayMaterial_color {
 	vec4 color;
 }; */
-layout(set = 2, binding = 0) uniform RayUniform_camera_position {
+layout(set = 1, binding = 1) uniform RayUniform_camera_position {
 	vec3 camera_position;
 };
-layout(set = 3, binding = 0) uniform RayUniform_model_translation {
+layout(set = 2, binding = 1) uniform RayUniform_model_translation {
 	vec3 model_translation;
+};
+layout(set = 3, binding = 1) uniform RayUniform_light_translation {
+	vec3 light_translation;
 };
 layout(location = 1) in vec4 FragPos;
 
@@ -50,10 +53,9 @@ void main(){
 	vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
 	if (finalDist < 0.01) {
 		vec3 normal = estimateNormal(camRay.pos);
-		vec3 lightPos=vec3(2.0,1.0,1.0);
-		float dotSN=dot(normal,normalize(lightPos-camRay.pos));
-		color = vec4(0.5+0.5*normal,1.0) * dotSN; //estimateNormal(camRay.pos);
+		//vec3 lightPos = vec3(2.0,1.0,1.0);
+		float dotSN=dot(normal,normalize((light_translation - model_translation) - camRay.pos));
+		color = vec4( (0.5+0.5*normal) * dotSN,1.0);
 	}
 	o_Target = color;
-	
 }
