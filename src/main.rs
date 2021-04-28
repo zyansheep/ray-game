@@ -78,9 +78,7 @@ fn setup(
 	);
 	// Add a `RenderGraph` edge connecting our new "ray_uniform" node to the main pass node. This
 	// ensures that "ray_uniform" runs before the main pass.
-	render_graph
-		.add_node_edge("ray_uniform", base::node::MAIN_PASS)
-		.unwrap();
+	render_graph.add_node_edge("ray_uniform", base::node::MAIN_PASS).unwrap();
 
 	// plane with PBR material
 	commands.spawn_bundle(PbrBundle {
@@ -94,7 +92,7 @@ fn setup(
 		PbrBundle {
 			mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
 			render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
-				pipeline_handle,
+				pipeline_handle.clone_weak(),
 			)]),
 			visible: Visible {
 				is_transparent: true,
@@ -103,8 +101,20 @@ fn setup(
 			transform: Transform::from_xyz(0.0, 0.5, 0.0),
 			..Default::default()
 		},
-	))
-	.insert(RayUniform::default()); // Camera Position & Model translation Uniform
+	)).insert(RayUniform::default()); // Camera Position & Model translation Uniform
+
+	commands.spawn_bundle(PbrBundle {
+		mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+		render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
+			pipeline_handle,
+		)]),
+		visible: Visible {
+			is_transparent: true,
+			..Default::default()
+		},
+		transform: Transform::from_xyz(0.0, 1.0, 2.0),
+		..Default::default()
+	}).insert(RayUniform::default()); // Camera Position & Model translation Uniform
 	
 	// light
 	commands.spawn_bundle(PointLightBundle {
@@ -120,19 +130,18 @@ fn setup(
 }
 
 fn uniform_update(
-	mut ray_uniform: Query<&mut RayUniform>,
+	mut ray_uniforms: Query<(&Transform, &mut RayUniform)>,
 	camera_transform: Query<&Transform, With<OrbitCamera>>,
-	model_transform: Query<&Transform, With<RayUniform>>,
 	light_transform: Query<&Transform, With<PointLight>>,
 ) {
-	let model_transform = model_transform.single().unwrap();
 	let camera_transform = camera_transform.single().unwrap();
 	let light_transform = light_transform.single().unwrap();
 	// Update all camera uniforms
-	let mut ray_uniform = ray_uniform.single_mut().unwrap();
-	ray_uniform.camera_position = camera_transform.translation;
-	ray_uniform.model_translation = model_transform.translation;
-	ray_uniform.light_translation = light_transform.translation;
+	for (model_transform, mut ray_uniform) in ray_uniforms.iter_mut() {
+		ray_uniform.camera_position = camera_transform.translation;
+		ray_uniform.model_translation = model_transform.translation;
+		ray_uniform.light_translation = light_transform.translation;
+	}
 }
 
 fn player_movement(
