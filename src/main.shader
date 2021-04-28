@@ -3,11 +3,11 @@ layout(location = 0) out vec4 o_Target;
 /* layout(set = 2, binding = 0) uniform RayMaterial_color {
 	vec4 color;
 }; */
-layout(set = 2, binding = 0) uniform CameraUniform_camera_position {
+layout(set = 2, binding = 0) uniform RayUniform_camera_position {
 	vec3 camera_position;
 };
-layout(set = 3, binding = 0) uniform CameraUniform_camera_direction {
-	vec3 camera_direction;
+layout(set = 3, binding = 0) uniform RayUniform_model_translation {
+	vec3 model_translation;
 };
 layout(location = 1) in vec4 FragPos;
 
@@ -18,7 +18,7 @@ struct ray {
 
 //Distance to scene at point
 float mainSDF(vec3 p){
-	return length(p - vec3(0.0, 0.5, 0.0)) - 0.5;
+	return length(p - vec3(0.0)) - 0.5;
 }
 //Estimate normal based on mainSDF function
 const float EPS=0.01;
@@ -35,31 +35,17 @@ vec3 estimateNormal(vec3 p){
 	return normalize(vec3(xDiff,yDiff,zDiff));
 }
 void main(){
-	/* vec2 uv=gl_FragCoord.xy/iResolution.xy;
-	uv-=vec2(0.5);//offset, so center of screen is origin
-	uv.x*=iResolution.x/iResolution.y;//scale, so there is no rectangular distortion */
-   
-	vec3 camPos=camera_position;
-	vec3 lookAt=camera_direction;
-	//o_Target = gl_FragCoord;
-	//o_Target = vec4(lookAt, 1);
-	float zoom = 0.1;
-	
-	//ray camRay = create_camera_ray(FragPos.xyz, camPos, lookAt, zoom);
-	/* ray camRay = ray(
-		FragPos.xyz,
-
-	) */
-	ray camRay = ray(FragPos.xyz, normalize(FragPos.xyz - camPos));
+	vec3 ray_start = FragPos.xyz - model_translation;
+	ray camRay = ray(ray_start, normalize(FragPos.xyz - camera_position));
 
 	float totalDist=0.0;
-	float finalDist=mainSDF(camRay.pos);
+	float finalDist = mainSDF(camRay.pos);
 	
 	int maxIters=30;
 	for(int iters=0; iters < maxIters && finalDist > 0.001; iters++){
 		camRay.pos+=finalDist*camRay.dir;
 		totalDist+=finalDist;
-		finalDist=mainSDF(camRay.pos);
+		finalDist = mainSDF(camRay.pos);
 	}
 	vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
 	if (finalDist < 0.01) {
