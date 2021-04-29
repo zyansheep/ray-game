@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy/", branch = "main" }
+heron = { git = "https://github.com/jcornaz/heron", branch = "main" }

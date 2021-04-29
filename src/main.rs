@@ -13,6 +13,7 @@ use bevy::{
 	},
 	wgpu::WgpuOptions,
 };
+use heron::prelude::*;
 
 mod player;
 use player::Player;
@@ -34,7 +35,8 @@ fn main() {
 			..Default::default()
 		})
 		.add_plugins(DefaultPlugins)
-		.add_plugin(PhysicsPlugin)
+		.add_plugin(PhysicsPlugin::default())
+		.insert_resource(Gravity::from(Vec3::new(0.0,-9.81,0.0)))
 		// Orbit Camera Plugin
 		.add_plugin(OrbitCameraPlugin::new(
 			Vec3::new(0.0, 1.0, 0.0),
@@ -86,11 +88,16 @@ fn setup(
 		.unwrap();
 
 	// plane with PBR material
-	commands.spawn_bundle(PbrBundle {
-		mesh: meshes.add(Mesh::from(shape::Plane { size: 5.0 })),
-		material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
-		..Default::default()
-	});
+	commands
+		.spawn_bundle(PbrBundle {
+			mesh: meshes.add(Mesh::from(shape::Plane { size: 5.0 })),
+			material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+			..Default::default()
+		})
+		.insert(Body::Cuboid {
+			half_extends: Vec3::new(2.5, 0.01, 2.5),
+		})
+		.insert(BodyType::Static);
 	// character
 	commands
 		.spawn_bundle(Player::bundle(
@@ -108,7 +115,11 @@ fn setup(
 				..Default::default()
 			},
 		))
-		.insert(RayUniform::default()); // Camera Position & Model translation Uniform
+		.insert(RayUniform::default())
+		.insert(Body::Cuboid {
+			half_extends: Vec3::new(0.5, 0.5, 0.5),
+		})
+		.insert(BodyType::Kinematic); // Camera Position & Model translation Uniform
 
 	commands
 		.spawn_bundle(PbrBundle {
@@ -120,10 +131,14 @@ fn setup(
 				is_transparent: true,
 				..Default::default()
 			},
-			transform: Transform::from_xyz(0.0, 1.0, 2.0),
+			transform: Transform::from_xyz(0.0, 5.0, 2.0),
 			..Default::default()
 		})
-		.insert(RayUniform::default()); // Camera Position & Model translation Uniform
+		.insert(RayUniform::default())
+		.insert(Body::Cuboid {
+			half_extends: Vec3::new(0.5, 0.5, 0.5),
+		})
+		.insert(BodyType::Dynamic); // Camera Position & Model translation Uniform
 
 	// light
 	commands.spawn_bundle(PointLightBundle {
