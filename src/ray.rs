@@ -1,6 +1,6 @@
 use bevy::math::Vec3;
-use bevy::render::renderer::RenderResources;
 use bevy::reflect::TypeUuid;
+use bevy::render::renderer::RenderResources;
 
 #[derive(RenderResources, Default, TypeUuid)]
 #[repr(C)]
