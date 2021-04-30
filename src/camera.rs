@@ -100,9 +100,7 @@ fn orbit_camera(
 		update_camera = true;
 		orbit_camera.focus = match focus_event.interpolation {
 			CameraInterpolation::None => focus_event.target,
-			_ => {
-				unimplemented!()
-			}
+			_ => { unimplemented!() }
 		}
 	}
 	for ev in ev_scroll.iter() {

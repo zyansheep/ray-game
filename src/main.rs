@@ -36,14 +36,14 @@ fn main() {
 		})
 		.add_plugins(DefaultPlugins)
 		.add_plugin(PhysicsPlugin::default())
-		.insert_resource(Gravity::from(Vec3::new(0.0,-9.81,0.0)))
+		.insert_resource(Gravity::from(Vec3::new(0.0, -9.81, 0.0)))
 		// Orbit Camera Plugin
 		.add_plugin(OrbitCameraPlugin::new(
 			Vec3::new(0.0, 1.0, 0.0),
 			Vec3::new(-3.0, 5.0, 0.0),
 		))
 		.add_startup_system(setup.system())
-		.add_system(player_movement.system())
+		.add_physics_system(player_movement.system())
 		.add_system_to_stage(CoreStage::PostUpdate, uniform_update.system()) // Update uniforms after logic
 		.run();
 }
@@ -90,15 +90,15 @@ fn setup(
 	// plane with PBR material
 	commands
 		.spawn_bundle(PbrBundle {
-			mesh: meshes.add(Mesh::from(shape::Plane { size: 5.0 })),
+			mesh: meshes.add(Mesh::from(shape::Plane { size: 20.0 })),
 			material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
 			..Default::default()
 		})
 		.insert(Body::Cuboid {
-			half_extends: Vec3::new(2.5, 0.01, 2.5),
+			half_extends: Vec3::new(10.0, 0.05, 10.0),
 		})
 		.insert(BodyType::Static);
-	// character
+	// Character to move
 	commands
 		.spawn_bundle(Player::bundle(
 			"You",
@@ -111,7 +111,7 @@ fn setup(
 					is_transparent: true,
 					..Default::default()
 				},
-				transform: Transform::from_xyz(0.0, 0.5, 0.0),
+				transform: Transform::from_xyz(0.0, 1.0, 0.0),
 				..Default::default()
 			},
 		))
@@ -121,6 +121,7 @@ fn setup(
 		})
 		.insert(BodyType::Kinematic); // Camera Position & Model translation Uniform
 
+	// Other Box to push around
 	commands
 		.spawn_bundle(PbrBundle {
 			mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
@@ -131,14 +132,19 @@ fn setup(
 				is_transparent: true,
 				..Default::default()
 			},
-			transform: Transform::from_xyz(0.0, 5.0, 2.0),
+			transform: Transform::from_xyz(0.0, 5.0, 3.0),
 			..Default::default()
 		})
 		.insert(RayUniform::default())
 		.insert(Body::Cuboid {
 			half_extends: Vec3::new(0.5, 0.5, 0.5),
 		})
-		.insert(BodyType::Dynamic); // Camera Position & Model translation Uniform
+		.insert(BodyType::Dynamic)
+		.insert(PhysicMaterial {
+			restitution: 0.5,
+			density: 2.0,
+			friction: 2.0,
+		}); // Camera Position & Model translation Uniform
 
 	// light
 	commands.spawn_bundle(PointLightBundle {
@@ -171,38 +177,49 @@ fn uniform_update(
 fn player_movement(
 	mut focus_broadcast: EventWriter<CameraFocusEvent>,
 	keyboard_input: Res<Input<KeyCode>>,
-	mut player_transform: Query<&mut Transform, With<Player>>,
+	mut q: QuerySet<(
+        Query<(&mut Transform, &Player)>,
+        Query<&Transform, With<OrbitCamera>>
+    )>,
+	/* mut player: Query<(&mut Transform, &Player), With<Player>>,
+	camera_transform: Query<&Transform, With<OrbitCamera>>, */
 ) {
-	let mut player_transform = player_transform.single_mut().unwrap();
+	
+	let camera_transform = q.q1().single().unwrap();
 
 	let mut moved = false;
+	let camera_forward = camera_transform.forward();
+	let camera_right = camera_transform.right();
+	let forward_direction = Vec3::new(camera_forward.x, 0.0, camera_forward.z).normalize();
+	let right_direction = Vec3::new(camera_right.x, 0.0, camera_right.z).normalize();
+
+	let (mut player_transform, player) = q.q0_mut().single_mut().unwrap();
 	if keyboard_input.pressed(KeyCode::W) {
 		//info!("'W' currently pressed");
 		moved = true;
-		player_transform.translation.x += 0.1;
+		player_transform.translation += player.speed * forward_direction;
 	}
 	if keyboard_input.pressed(KeyCode::S) {
 		//info!("'S' currently pressed");
 		moved = true;
-		player_transform.translation.x -= 0.1;
+		player_transform.translation -= player.speed * forward_direction;
 	}
 	if keyboard_input.pressed(KeyCode::A) {
-		//info!("'A' currently pressed");
 		moved = true;
-		player_transform.translation.z -= 0.1;
+		player_transform.translation -= player.speed * right_direction;
 	}
 	if keyboard_input.pressed(KeyCode::D) {
-		//info!("'A' currently pressed");
 		moved = true;
-		player_transform.translation.z += 0.1;
+		player_transform.translation += player.speed * right_direction;
 	}
+	// Up and Down
 	if keyboard_input.pressed(KeyCode::Space) {
 		moved = true;
-		player_transform.translation.y += 0.1;
+		player_transform.translation.y += player.speed;
 	}
 	if keyboard_input.pressed(KeyCode::LShift) {
 		moved = true;
-		player_transform.translation.y -= 0.1;
+		player_transform.translation.y -= player.speed;
 	}
 	if moved {
 		focus_broadcast.send(CameraFocusEvent::new(
