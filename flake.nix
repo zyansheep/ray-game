@@ -37,7 +37,7 @@
 				vulkan-validation-layers
 				alsaLib # Sound support
 				libudev # device management
-				lld # fast linker
+				# lld # fast linker
 			];
 		};
 		defaultPackage = packages.ray_game;
@@ -50,7 +50,10 @@
 
 		# `nix develop`
 		devShell = pkgs.mkShell {
-			buildInputs = packages.ray_game.buildInputs;
+			buildInputs = packages.ray_game.buildInputs ++ [ pkgs.llvmPackages_12.lldClang.bintools ];
+			LD_LIBRARY_PATH = "${nixpkgs.lib.makeLibraryPath packages.ray_game.buildInputs}";
+  			hardeningDisable = [ "fortify" ];
+  			NIX_CFLAGS_LINK = "-fuse-ld=lld";
 		};
 	});
 }
