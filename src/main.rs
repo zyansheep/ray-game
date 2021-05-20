@@ -163,6 +163,7 @@ fn uniform_update(
 	mut ray_uniforms: Query<(&Transform, &mut RayUniform)>,
 	camera_transform: Query<&Transform, With<OrbitCamera>>,
 	light_transform: Query<&Transform, With<PointLight>>,
+	time: Res<Time>,
 ) {
 	let camera_transform = camera_transform.single().unwrap();
 	let light_transform = light_transform.single().unwrap();
@@ -171,6 +172,7 @@ fn uniform_update(
 		ray_uniform.camera_position = camera_transform.translation;
 		ray_uniform.model_translation = model_transform.translation;
 		ray_uniform.light_translation = light_transform.translation;
+		ray_uniform.time = time.seconds_since_startup() as f32;
 	}
 }
 
@@ -178,13 +180,12 @@ fn player_movement(
 	mut focus_broadcast: EventWriter<CameraFocusEvent>,
 	keyboard_input: Res<Input<KeyCode>>,
 	mut q: QuerySet<(
-        Query<(&mut Transform, &Player)>,
-        Query<&Transform, With<OrbitCamera>>
-    )>,
+		Query<(&mut Transform, &Player)>,
+		Query<&Transform, With<OrbitCamera>>,
+	)>,
 	/* mut player: Query<(&mut Transform, &Player), With<Player>>,
 	camera_transform: Query<&Transform, With<OrbitCamera>>, */
 ) {
-	
 	let camera_transform = q.q1().single().unwrap();
 
 	let mut moved = false;

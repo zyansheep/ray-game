@@ -12,12 +12,16 @@ layout(set = 2, binding = 1) uniform RayUniform_model_translation {
 layout(set = 3, binding = 1) uniform RayUniform_light_translation {
 	vec3 light_translation;
 };
+/* layout(set = 4, binding = 1) uniform RayUniform_time {
+	float time;
+}; */
 layout(location = 1) in vec4 FragPos;
 
 //Distance to scene at point
 float mainSDF(vec3 p){
 	return length(p - vec3(0.0)) - 0.5;
 }
+
 //Estimate normal based on mainSDF function
 const float EPS=0.01;
 const float ITER_MAX=30;

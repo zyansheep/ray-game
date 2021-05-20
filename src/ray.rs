@@ -9,4 +9,5 @@ pub struct RayUniform {
 	pub camera_position: Vec3,
 	pub model_translation: Vec3,
 	pub light_translation: Vec3,
+	pub time: f32,
 }
